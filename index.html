@@ -399,10 +399,11 @@
         .action-btn:hover { transform: scale(1.03); }
 
         .feedback-msg {
-            font-size: 1.2rem;
+            font-size: 1rem;
             font-weight: bold;
             margin-top: 15px;
             min-height: 30px;
+            white-space: pre-line;
         }
         .feedback-msg.correct { color: var(--accent-green); }
         .feedback-msg.incorrect { color: var(--danger); }
@@ -449,6 +450,7 @@
             margin-bottom: 10px;
             font-size: 0.95rem;
             color: var(--text-muted);
+            line-height: 2.5;
         }
         .grid-2cols {
             display: grid;
@@ -478,6 +480,23 @@
             outline: none;
         }
         .short-input:focus { border-color: var(--accent-gold); }
+
+        .inline-input {
+            background: #0f172a;
+            border: 2px solid #475569;
+            color: var(--accent-gold);
+            font-weight: bold;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            width: 50px;
+            text-align: center;
+            outline: none;
+            display: inline-block;
+            margin: 0 3px;
+        }
+        .inline-input:focus { border-color: var(--accent-green); background: #090d16; }
+
         .custom-table-wrapper {
             width: 100%;
             overflow-x: auto;
@@ -609,6 +628,7 @@
             .options-grid { grid-template-columns: 1fr !important; }
             .row-item { flex-direction: column; align-items: stretch; gap: 6px; }
             .row-item input { width: 100% !important; }
+            .inline-input { width: 40px !important; font-size: 0.85rem; }
         }
     </style>
 
@@ -630,8 +650,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // A normál alkalmazáskód ezt a Promise-t várja meg, így biztosan
-        // csak azután próbáljuk használni a Firestore-t, hogy elkészült a kapcsolat.
         window.firebaseLeaderboardReady = Promise.resolve(db);
 
         window.firebaseLeaderboard = {
@@ -682,14 +700,14 @@
             <div class="welcome-box">
                 <h2>Indul a Bagoly Küldetés!</h2>
                 <p>Írd be a neved, hogy elkezdhessük:</p>
-                <input type="text" id="player-name-input" class="name-input" placeholder="Pl. Peti" autocomplete="off">
+                <input type="text" id="player-name-input" class="name-input" placeholder="Pl. Peti" autocomplete="off" autofocus>
                 <button class="start-btn" onclick="handleStartGame()">Kezdés 🚀</button>
             </div>
         </div>
     </div>
 
     <footer>
-        Készítette: Kiss Tibor | Verziószám: 1.3
+        Készítette: Kiss Tibor | Verziószám: 1.1 | Minden jog fentartva.
     </footer>
 
     <script>
@@ -709,7 +727,8 @@
             'addsub_tu': null, 'addsub_trad': null, 'neighbors': null, 'practice20': null, 'practice30': null, 'wordprobs': null,
             'jly_all': null,
             'vowels_i': null, 'vowels_o': null, 'vowels_u': null, 'vowels_30': null,
-            'exam_sheet': null
+            'exam_sheet': null,
+            'grammar_exam_sheet': null
         };
 
         async function getLeaderboard() {
@@ -1091,7 +1110,7 @@
                 <div class="welcome-box">
                     <h2>Indul a Bagoly Küldetés!</h2>
                     <p>Írd be a neved, hogy elkezdhessük:</p>
-                    <input type="text" id="player-name-input" class="name-input" placeholder="Pl. Peti" autofocus>
+                    <input type="text" id="player-name-input" class="name-input" placeholder="Pl. Peti" autocomplete="off" autofocus>
                     <button class="start-btn" onclick="handleStartGame()">Kezdés 🚀</button>
                 </div>
             `;
@@ -1176,7 +1195,7 @@
                 <button class="back-btn" onclick="renderMainMenu()">⬅ Vissza a Főmenübe</button>
                 <div class="sub-grid" style="grid-template-columns: 1fr 1fr; max-width: 700px; margin: 10px auto;">
                     <button class="sub-btn special" style="grid-column: span 2; background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #f59e0b;" onclick="openExamSheet()">
-                        <span style="font-size: 1.1rem;">⭐ Gyakorlás a dolgozatra! </span>
+                        <span style="font-size: 1.1rem;">⭐ Gyakorlás a matek dolgozatra! </span>
                         <span style="font-size: 0.9rem; color: #fef08a;"> Katt a gyakorlásért! </span>
                         ${getPctStr('exam_sheet')}
                     </button>
@@ -1190,18 +1209,18 @@
                     </button>
                     <button class="sub-btn" onclick="startTaskSession('neighbors', generateNeighborsQuestions())" style="grid-column: span 2;">
                         <span>🔢 Számszomszédok </span>
-                        ${stats['neighbors'] !== null ? `<span class="percentage-badge">Legjobb: ${stats['neighbors']}%</span>` : `<span class="percentage-badge">Még nem játszottál</span>`}
+                        ${getPctStr('neighbors')}
                     </button>
                     <button class="sub-btn special" style="grid-column: span 2;" onclick="startTaskSession('wordprobs', generateWordProblems10())">
                         <span>💡 Szöveges feladatok </span>
-                        ${stats['wordprobs'] !== null ? `<span class="percentage-badge">Legjobb: ${stats['wordprobs']}%</span>` : `<span class="percentage-badge">Még nem játszottál</span>`}
+                        ${getPctStr('wordprobs')}
                     </button>
                 </div>
             `;
         }
 
         function openExamSheet() {
-            document.getElementById("nav-title").innerText = `Gyakorlás a dolgozatra (${playerName})`;
+            document.getElementById("nav-title").innerText = `Gyakorlás a matek dolgozatra (${playerName})`;
             document.getElementById("owl-speech").innerText = `Oldd meg figyelmesen a felmérő feladatait, ${playerName}! Mutasd meg, mit tudsz!`;
 
             const content = document.getElementById("main-content");
@@ -1279,7 +1298,7 @@
                                 </tr>
                                 <tr>
                                     <td><input type="text" class="table-input" data-ans="40"></td>
-                                    <td><input type="text" class="table-input" data-ans="48"></td>
+                                    <td><input type="text" class="table-input" data-ans="46"></td>
                                     <td><b>47</b></td>
                                     <td><input type="text" class="table-input" data-ans="48"></td>
                                     <td><input type="text" class="table-input" data-ans="50"></td>
@@ -1415,7 +1434,6 @@
             let totalPoints = 0;
             let maxPoints = 68;
 
-            // 1. Blokk (8 pont)
             let b1Inputs = document.querySelectorAll("#block-1 .short-input");
             let b1Points = 0;
             b1Inputs.forEach(i => { if(i.value.trim() === i.dataset.ans) b1Points += 1; });
@@ -1425,7 +1443,6 @@
             else if(b1Points > 0) { fb1.className = "feedback-msg warning"; fb1.innerText = `Részben helyes: ${b1Points} / 8 pont`; }
             else { fb1.className = "feedback-msg incorrect"; fb1.innerText = "Nincs helyes válasz."; }
 
-            // 2. Blokk (8 pont: 4 pont a növekvő sorrendre, 2-2 pont a páros/páratlan számokra sorrend nélkül)
             let seqSortRaw = document.getElementById("ans-seq-sort").value;
             let seqNums = seqSortRaw.replace(/[^\d,]/g, '').split(',').map(s => s.trim()).filter(s => s.length > 0);
             let targetSeq = ["21", "36", "43", "54", "65", "78", "89"];
@@ -1470,7 +1487,6 @@
             else if(b2Points > 0) { fb2.className = "feedback-msg warning"; fb2.innerText = `Részben helyes: ${b2Points} / 8 pont`; }
             else { fb2.className = "feedback-msg incorrect"; fb2.innerText = "Ellenőrizd a sorrendet és a számokat."; }
 
-            // 3. Blokk (12 pont)
             let b3Inputs = document.querySelectorAll("#block-3 .table-input");
             let b3Points = 0;
             b3Inputs.forEach(i => { if(i.value.trim() === i.dataset.ans) b3Points += 1; });
@@ -1480,7 +1496,6 @@
             else if(b3Points > 0) { fb3.className = "feedback-msg warning"; fb3.innerText = `Részben helyes: ${b3Points} / 12 pont`; }
             else { fb3.className = "feedback-msg incorrect"; fb3.innerText = "Van hiba a szomszédok között."; }
 
-            // 4. Blokk (12 pont, 6 mező -> 2 pont/mező)
             let b4Inputs = document.querySelectorAll("#block-4 .short-input");
             let b4Points = 0;
             b4Inputs.forEach(i => { if(i.value.trim() === i.dataset.ans) b4Points += 2; });
@@ -1490,7 +1505,6 @@
             else if(b4Points > 0) { fb4.className = "feedback-msg warning"; fb4.innerText = `Részben helyes: ${b4Points} / 12 pont`; }
             else { fb4.className = "feedback-msg incorrect"; fb4.innerText = "Hiba a számsorozatokban."; }
 
-            // 5. Blokk (16 pont)
             let b5Inputs = document.querySelectorAll("#block-5 .short-input");
             let b5Points = 0;
             b5Inputs.forEach(i => { if(i.value.trim() === i.dataset.ans) b5Points += 1; });
@@ -1500,7 +1514,6 @@
             else if(b5Points > 0) { fb5.className = "feedback-msg warning"; fb5.innerText = `Részben helyes: ${b5Points} / 16 pont`; }
             else { fb5.className = "feedback-msg incorrect"; fb5.innerText = "Van hibás számítás."; }
 
-            // 6. Blokk (4 pont)
             let w1 = document.getElementById("ans-word-1").value.trim();
             let b6Points = (w1 === "20") ? 4 : 0;
             totalPoints += b6Points;
@@ -1508,7 +1521,6 @@
             if(b6Points === 4) { fb6.className = "feedback-msg correct"; fb6.innerText = "Helyes! (+4 pont)"; }
             else { fb6.className = "feedback-msg incorrect"; fb6.innerText = "Nem jó a végeredmény."; }
 
-            // 7. Blokk (4 pont)
             let w2 = document.getElementById("ans-word-2").value.trim();
             let b7Points = (w2 === "4") ? 4 : 0;
             totalPoints += b7Points;
@@ -1516,7 +1528,6 @@
             if(b7Points === 4) { fb7.className = "feedback-msg correct"; fb7.innerText = "Helyes! (+4 pont)"; }
             else { fb7.className = "feedback-msg incorrect"; fb7.innerText = "Nem jó a végeredmény."; }
 
-            // 8. Blokk (4 pont)
             let b8Inputs = document.querySelectorAll("#block-8 .short-input");
             let b8Points = 0;
             b8Inputs.forEach(i => { if(i.value.trim().toLowerCase() === i.dataset.ans) b8Points += 1; });
@@ -1530,7 +1541,7 @@
             stats['exam_sheet'] = finalPct;
             score += totalPoints;
             document.getElementById("score").innerText = score;
-            const leaderboardSaved = await saveToLeaderboard(playerName, score);
+            await saveToLeaderboard(playerName, score);
 
             let resBox = document.getElementById("result-box");
             let resText = document.getElementById("result-text");
@@ -1611,6 +1622,11 @@
             content.innerHTML = `
                 <button class="back-btn" onclick="renderMainMenu()">⬅ Vissza a Főmenübe</button>
                 <div class="sub-grid" style="grid-template-columns: 1fr; max-width: 600px; margin: 10px auto;">
+                    <button class="sub-btn special" style="background: linear-gradient(135deg, #f59e0b, #d97706); border-color: #f59e0b;" onclick="openGrammarExamSheet()">
+                        <span style="font-size: 1.1rem;">⭐ Gyakorlás a nyelvtan dolgozatra!</span>
+                        <span style="font-size: 0.9rem; color: #fef08a;">Katt a felmérőért és gyakorlásért!</span>
+                        ${getPctStr('grammar_exam_sheet')}
+                    </button>
                     <button class="sub-btn special-purple" onclick="startTaskSession('jly_all', getJLyPool())">
                         <span style="font-size: 1.1rem;">Pótold a szavakban a j hangot jelölő betűt!</span>
                         ${getPctStr('jly_all')}
@@ -1621,6 +1637,341 @@
                     </button>
                 </div>
             `;
+        }
+
+        function openGrammarExamSheet() {
+            document.getElementById("nav-title").innerText = `Gyakorlás a nyelvtan dolgozatra (${playerName})`;
+            document.getElementById("owl-speech").innerText = `Oldd meg figyelmesen a nyelvtan felmérő feladatait, ${playerName}!`;
+
+            const content = document.getElementById("main-content");
+            content.innerHTML = `
+                <div class="sheet-inner">
+                    <button class="back-btn" onclick="openGrammarMenu()">⬅ Vissza a Nyelvtan menübe</button>
+                    
+                    <div id="result-box" class="result-summary">
+                        <h2>Értékelés</h2>
+                        <p id="result-text" style="font-size: 1.1rem;"></p>
+                    </div>
+
+                    <!-- 1. Feladat -->
+                    <div class="task-block" id="block-1">
+                        <div class="task-header">
+                            <span>1. Tagold mondatokra, és írd le helyesen a szöveget!</span>
+                            <span class="task-points">6 pont</span>
+                        </div>
+                        <div class="sub-task">Szöveg: <i>a folyó partján fűzfák állnak fölötte sirály száll kecsesen a vízen csónak ringatózik</i></div>
+                        <div class="row-item">
+                            <input type="text" class="short-input" id="q1-ans" style="width: 100%;" placeholder="Tagolva írd le a megoldást!">
+                        </div>
+                        <div class="feedback-msg" id="fb-1"></div>
+                    </div>
+
+                    <!-- 2. Feladat -->
+                    <div class="task-block" id="block-2">
+                        <div class="task-header">
+                            <span>2. Írd le szavakra tagolva az egybeírt mondatot!</span>
+                            <span class="task-points">4 pont</span>
+                        </div>
+                        <div class="sub-task">Mondat: <b>Atópartjánbékákkuruttyolnak.</b></div>
+                        <div class="row-item">
+                            <input type="text" class="short-input" id="q2-ans" style="width: 100%;" placeholder="Írd le szavakra bontva a mondatot...">
+                        </div>
+                        <div class="feedback-msg" id="fb-2"></div>
+                    </div>
+
+                    <!-- 3. Feladat (Javítva: Teljesen üres, tiszta, nagy mezők) -->
+                    <div class="task-block" id="block-3">
+                        <div class="task-header">
+                            <span>3. Válaszd ki és írd le a szavakból a megfelelő betűket!</span>
+                            <span class="task-points">4 pont</span>
+                        </div>
+                        <div class="sub-task">Szavak: <b>kettő, kisebb, szivattyú, jószívű</b></div>
+                        <div class="row-item" style="margin-bottom: 12px; flex-direction: column; align-items: stretch; gap: 6px;">
+                            <label style="color:var(--text-muted); font-size:0.95rem;">a) Hosszú magánhangzók:</label>
+                            <input type="text" id="q3-a" style="background: #162032; border: 2px solid #475569; color: white; padding: 12px; font-size: 1.1rem; border-radius: 6px; width: 100%; outline: none;" autocomplete="off">
+                        </div>
+                        <div class="row-item" style="flex-direction: column; align-items: stretch; gap: 6px;">
+                            <label style="color:var(--text-muted); font-size:0.95rem;">b) Hosszú mássalhangzók:</label>
+                            <input type="text" id="q3-b" style="background: #162032; border: 2px solid #475569; color: white; padding: 12px; font-size: 1.1rem; border-radius: 6px; width: 100%; outline: none;" autocomplete="off">
+                        </div>
+                        <div class="feedback-msg" id="fb-3"></div>
+                    </div>
+
+                    <!-- 4. Feladat -->
+                    <div class="task-block" id="block-4">
+                        <div class="task-header">
+                            <span>4. Állítsd számozással betűrendbe a szereplőket!</span>
+                            <span class="task-points">4 pont</span>
+                        </div>
+                        <div class="sub-task">Nevek: <b>Karak, Vuk, Kele, Bogáncs</b></div>
+                        <div class="row-item">
+                            <input type="text" class="short-input" id="q4-ans" style="width: 100%;" placeholder="Írd le sorrendbe a szavakat...">
+                        </div>
+                        <div class="feedback-msg" id="fb-4"></div>
+                    </div>
+
+                    <!-- 5. Feladat -->
+                    <div class="task-block" id="block-5">
+                        <div class="task-header">
+                            <span>5. Pótold a következő szavak hiányzó ékezeteit!</span>
+                            <span class="task-points">6 pont</span>
+                        </div>
+                        <div class="sub-task">Szavak: <b>gyogyıt, zoldul, konnyu, daru, forro, vetito</b></div>
+                        <div class="row-item">
+                            <input type="text" class="short-input" id="q5-ans" style="width: 100%;" placeholder="Írd le helyesen, ékezetekkel, vesszővel...">
+                        </div>
+                        <div class="feedback-msg" id="fb-5"></div>
+                    </div>
+
+                    <!-- 6. Feladat -->
+                    <div class="task-block" id="block-6">
+                        <div class="task-header">
+                            <span>6. Egészítsd ki a megfelelő hosszú vagy rövid mássalhangzóval!</span>
+                            <span class="task-points">4 pont</span>
+                        </div>
+                        <div class="sub-task" style="line-height: 2.8;">
+                            a) l-ll: ke<input type="text" class="inline-input" id="q6-1" maxlength="3">emes, sze<input type="text" class="inline-input" id="q6-2" maxlength="3">íd, nu<input type="text" class="inline-input" id="q6-3" maxlength="3">a, ha<input type="text" class="inline-input" id="q6-4" maxlength="3">gat<br>
+                            b) sz-ssz: ro<input type="text" class="inline-input" id="q6-5" maxlength="3">, le<input type="text" class="inline-input" id="q6-6" maxlength="3">, ö<input type="text" class="inline-input" style="width: 55px;" id="q6-7" maxlength="5">eg, vi<input type="text" class="inline-input" style="width: 55px;" id="q6-8" maxlength="5">ajön
+                        </div>
+                        <div class="feedback-msg" id="fb-6"></div>
+                    </div>
+
+                    <!-- 7. Feladat -->
+                    <div class="task-block" id="block-7">
+                        <div class="task-header">
+                            <span>7. Pótold a szavakban a j hangot jelölő betűt (j vagy ly)!</span>
+                            <span class="task-points">7 pont</span>
+                        </div>
+                        <div class="sub-task" style="line-height: 2.8;">
+                            bor<input type="text" class="inline-input" id="q7-1" maxlength="2">ú, vá<input type="text" class="inline-input" id="q7-2" maxlength="2">ú, veszé<input type="text" class="inline-input" id="q7-3" maxlength="2">es, te<input type="text" class="inline-input" id="q7-4" maxlength="2">föl, bé<input type="text" class="inline-input" id="q7-5" maxlength="2">eg, ga<input type="text" class="inline-input" id="q7-6" maxlength="3">, i<input type="text" class="inline-input" id="q7-7" maxlength="2">ed
+                        </div>
+                        <div class="feedback-msg" id="fb-7"></div>
+                    </div>
+
+                    <!-- 8. Feladat -->
+                    <div class="task-block" id="block-8">
+                        <div class="task-header">
+                            <span>8. Írd le szótagolva a következő szavakat!</span>
+                            <span class="task-points">6 pont</span>
+                        </div>
+                        <div class="sub-task">Szavak: <b>mondja, csengettyű, fiatal, együttes, pedzi, otthon</b></div>
+                        <div class="row-item" style="gap: 8px; margin-bottom: 6px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><span>1. mondja:</span> <input type="text" class="short-input" style="width:70%; margin-top:0;" id="q8-1" placeholder="A szavak helyes elválasztása"></div>
+                        </div>
+                        <div class="row-item" style="gap: 8px; margin-bottom: 6px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><span>2. csengettyű:</span> <input type="text" class="short-input" style="width:70%; margin-top:0;" id="q8-2" placeholder="A szavak helyes elválasztása"></div>
+                        </div>
+                        <div class="row-item" style="gap: 8px; margin-bottom: 6px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><span>3. fiatal:</span> <input type="text" class="short-input" style="width:70%; margin-top:0;" id="q8-3" placeholder="A szavak helyes elválasztása"></div>
+                        </div>
+                        <div class="row-item" style="gap: 8px; margin-bottom: 6px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><span>4. együttes:</span> <input type="text" class="short-input" style="width:70%; margin-top:0;" id="q8-4" placeholder="A szavak helyes elválasztása"></div>
+                        </div>
+                        <div class="row-item" style="gap: 8px; margin-bottom: 6px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><span>5. pedzi:</span> <input type="text" class="short-input" style="width:70%; margin-top:0;" id="q8-5" placeholder="A szavak helyes elválasztása"></div>
+                        </div>
+                        <div class="row-item" style="gap: 8px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;"><span>6. otthon:</span> <input type="text" class="short-input" style="width:70%; margin-top:0;" id="q8-6" placeholder="A szavak helyes elválasztása"></div>
+                        </div>
+                        <div class="feedback-msg" id="fb-8"></div>
+                    </div>
+
+                    <!-- 9. Feladat -->
+                    <div class="task-block" id="block-9">
+                        <div class="task-header">
+                            <span>9. Egészítsd ki a mondatot a víz szó megfelelő alakjával!</span>
+                            <span class="task-points">5 pont</span>
+                        </div>
+                        <div class="sub-task" style="line-height: 2.6;">
+                            Meglocsoltam a virágokat <input type="text" class="inline-input" style="width: 110px;" id="q9-1"><br>
+                            Jót kortyoltam a friss <input type="text" class="inline-input" style="width: 110px;" id="q9-2"><br>
+                            Palkó beugrott a <input type="text" class="inline-input" style="width: 110px;" id="q9-3"><br>
+                            Tiszta <input type="text" class="inline-input" style="width: 110px;" id="q9-4"> öntünk a kancsóba.<br>
+                            Egész délután a <input type="text" class="inline-input" style="width: 110px;" id="q9-5"> lubickoltam.
+                        </div>
+                        <div class="feedback-msg" id="fb-9"></div>
+                    </div>
+
+                    <!-- 10. Feladat -->
+                    <div class="task-block" id="block-10">
+                        <div class="task-header">
+                            <span>10. Pótold a mondatokban a hiányzó mássalhangzókat!</span>
+                            <span class="task-points">5 pont</span>
+                        </div>
+                        <div class="sub-task" style="line-height: 2.6;">
+                            Senki se me<input type="text" class="inline-input" id="q10-1" maxlength="6">en be a terembe!<br>
+                            Mindenki tu<input type="text" class="inline-input" id="q10-2" maxlength="6">a a verset?<br>
+                            Ki kül<input type="text" class="inline-input" id="q10-3" maxlength="6">e ezt a levelet?<br>
+                            Vera nem ha<input type="text" class="inline-input" id="q10-4" maxlength="6">a a zenét.<br>
+                            El ne fo<input type="text" class="inline-input" id="q10-5" maxlength="6">on a sütemény!
+                        </div>
+                        <div class="feedback-msg" id="fb-10"></div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 30px;">
+                        <button class="action-btn" style="padding: 14px 35px; font-size: 1.2rem; width: 100%; max-width: 400px;" onclick="evaluateGrammarExam()">Feladatlap beküldése és ellenőrzése 📋</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function evaluateGrammarExam() {
+            let totalPoints = 0;
+            let maxPoints = 51;
+
+            // 1. Feladat (6 pont)
+            let ans1 = document.getElementById("q1-ans").value.toLowerCase();
+            let p1 = (ans1.includes("a folyó partján fűzfák állnak") && ans1.includes("fölötte sirály száll kecsesen") && ans1.includes("a vízen csónak ringatózik")) ? 6 : 0;
+            totalPoints += p1;
+            let fb1 = document.getElementById("fb-1");
+            fb1.className = p1 === 6 ? "feedback-msg correct" : "feedback-msg incorrect";
+            fb1.innerText = p1 === 6 ? "Helyes! (+6 pont)" : "❌ Hiba a mondatok tagolásában, kezdőbetűiben vagy írásjeleiben. (Helyes: A folyó partján fűzfák állnak. Fölötte sirály száll kecsesen. A vízen csónak ringatózik.)";
+
+            // 2. Feladat (4 pont)
+            let ans2 = document.getElementById("q2-ans").value.toLowerCase();
+            let p2 = (ans2.includes("a") && ans2.includes("tó") && ans2.includes("partján") && ans2.includes("békák") && ans2.includes("kuruttyolnak")) ? 4 : 0;
+            totalPoints += p2;
+            let fb2 = document.getElementById("fb-2");
+            fb2.className = p2 === 4 ? "feedback-msg correct" : "feedback-msg incorrect";
+            fb2.innerText = p2 === 4 ? "Helyes! (+4 pont)" : "❌ Hiba a szavak szétválasztásában. (Helyes: A tó partján békák kuruttyolnak.)";
+
+            // 3. Feladat (4 pont)
+            let a3 = document.getElementById("q3-a").value.toLowerCase();
+            let b3 = document.getElementById("q3-b").value.toLowerCase();
+            let p3 = 0;
+            let err3 = [];
+            let hasLongVowels = (a3.includes("ő") || a3.includes("ú") || a3.includes("ó") || a3.includes("í") || a3.includes("ű"));
+            let hasLongCons = (b3.includes("tt") || b3.includes("bb") || b3.includes("tty"));
+            if (hasLongVowels) p3 += 2; else err3.push("Hosszú magánhangzók hiányosak vagy hibásak");
+            if (hasLongCons) p3 += 2; else err3.push("Hosszú mássalhangzók hiányosak vagy hibásak");
+            totalPoints += p3;
+            let fb3 = document.getElementById("fb-3");
+            fb3.className = p3 === 4 ? "feedback-msg correct" : "feedback-msg warning";
+            fb3.innerText = p3 === 4 ? "Helyes! (+4 pont)" : `⚠️ Részeredmény: ${p3} / 4 pont.\nHibák: ${err3.join(", ")}.`;
+
+            // 4. Feladat (4 pont)
+            let ans4 = document.getElementById("q4-ans").value.toLowerCase();
+            let p4 = (ans4.includes("bogáncs") && ans4.includes("karak") && ans4.includes("kele") && ans4.includes("vuk")) ? 4 : 0;
+            totalPoints += p4;
+            let fb4 = document.getElementById("fb-4");
+            fb4.className = p4 === 4 ? "feedback-msg correct" : "feedback-msg incorrect";
+            fb4.innerText = p4 === 4 ? "Helyes! (+4 pont)" : "❌ Helytelen betűrend. (Helyes sorrend: Bogáncs, Karak, Kele, Vuk)";
+
+            // 5. Feladat (6 pont)
+            let ans5 = document.getElementById("q5-ans").value.toLowerCase();
+            let p5 = 0;
+            let missingAccents = [];
+            if (ans5.includes("gyógyít")) p5 += 1; else missingAccents.push("gyógyít");
+            if (ans5.includes("zöldül")) p5 += 1; else missingAccents.push("zöldül");
+            if (ans5.includes("könnyű")) p5 += 1; else missingAccents.push("könnyű");
+            if (ans5.includes("daru")) p5 += 1; else missingAccents.push("daru");
+            if (ans5.includes("forró")) p5 += 1; else missingAccents.push("forró");
+            if (ans5.includes("vetítő")) p5 += 1; else missingAccents.push("vetítő");
+            totalPoints += p5;
+            let fb5 = document.getElementById("fb-5");
+            fb5.className = p5 === 6 ? "feedback-msg correct" : "feedback-msg warning";
+            fb5.innerText = p5 === 6 ? "Helyes! (+6 pont)" : `⚠️ Részeredmény: ${p5} / 6 pont.\nHibás vagy hiányzó szavak ékezetei: ${missingAccents.join(", ")}`;
+
+            // 6. Feladat (4 pont)
+            let p6 = 0;
+            let err6 = [];
+            if (document.getElementById("q6-1").value.trim().toLowerCase() === "ll") p6 += 0.5; else err6.push("1. szó (kellémes)");
+            if (document.getElementById("q6-2").value.trim().toLowerCase() === "l") p6 += 0.5; else err6.push("2. szó (szelíd)");
+            if (document.getElementById("q6-3").value.trim().toLowerCase() === "ll") p6 += 0.5; else err6.push("3. szó (nulla)");
+            if (document.getElementById("q6-4").value.trim().toLowerCase() === "ll") p6 += 0.5; else err6.push("4. szó (hallgat)");
+            if (document.getElementById("q6-5").value.trim().toLowerCase() === "ssz") p6 += 0.5; else err6.push("5. szó (rossz)");
+            if (document.getElementById("q6-6").value.trim().toLowerCase() === "sz") p6 += 0.5; else err6.push("6. szó (lesz)");
+            if (document.getElementById("q6-7").value.trim().toLowerCase() === "ssz") p6 += 0.5; else err6.push("7. szó (összeg)");
+            if (document.getElementById("q6-8").value.trim().toLowerCase() === "ssz") p6 += 0.5; else err6.push("8. szó (visszajön)");
+            p6 = Math.round(p6);
+            totalPoints += p6;
+            let fb6 = document.getElementById("fb-6");
+            fb6.className = p6 === 4 ? "feedback-msg correct" : "feedback-msg warning";
+            fb6.innerText = p6 === 4 ? "Helyes! (+4 pont)" : `⚠️ Részeredmény: ${p6} / 4 pont.\nHibás helyek: ${err6.join("; ")}`;
+
+            // 7. Feladat (7 pont)
+            let q7_keys = ["j", "ly", "ly", "j", "ly", "lly", "j"];
+            let p7 = 0;
+            let err7 = [];
+            let q7_words = ["borjú", "vályú", "veszélyes", "tejföl", "bélyeg", "gally", "ijed"];
+            for(let i=1; i<=7; i++) {
+                let val = document.getElementById(`q7-${i}`).value.trim().toLowerCase();
+                let expected = q7_keys[i-1];
+                if(val === expected) {
+                    p7++;
+                } else {
+                    err7.push(`${i}. szó (${q7_words[i-1]}: "${val}" helyett "${expected}" kellett volna)`);
+                }
+            }
+            totalPoints += p7;
+            let fb7 = document.getElementById("fb-7");
+            fb7.className = p7 === 7 ? "feedback-msg correct" : "feedback-msg warning";
+            fb7.innerText = p7 === 7 ? "Helyes! (+7 pont)" : `⚠️ Részeredmény: ${p7} / 7 pont.\nHibák: ${err7.join("; ")}`;
+
+            // 8. Feladat (6 pont)
+            let p8 = 0;
+            let err8 = [];
+            let w1 = document.getElementById("q8-1").value.trim().toLowerCase();
+            let w2 = document.getElementById("q8-2").value.trim().toLowerCase();
+            let w3 = document.getElementById("q8-3").value.trim().toLowerCase();
+            let w4 = document.getElementById("q8-4").value.trim().toLowerCase();
+            let w5 = document.getElementById("q8-5").value.trim().toLowerCase();
+            let w6 = document.getElementById("q8-6").value.trim().toLowerCase();
+
+            if (w1.includes("mond-ja")) p8++; else err8.push("mondja (mond-ja)");
+            if (w2.includes("csen-gety-tyű")) p8++; else err8.push("csengettyű (csen-gety-tyű)");
+            if (w3.includes("fi-a-tal")) p8++; else err8.push("fiatal (fi-a-tal)");
+            if (w4.includes("e-gyüt-tes")) p8++; else err8.push("együttes (e-gyüt-tes)");
+            if (w5.includes("pe-dzi")) p8++; else err8.push("pedzi (pe-dzi)");
+            if (w6.includes("ott-hon")) p8++; else err8.push("otthon (ott-hon)");
+
+            totalPoints += p8;
+            let fb8 = document.getElementById("fb-8");
+            fb8.className = p8 === 6 ? "feedback-msg correct" : "feedback-msg warning";
+            fb8.innerText = p8 === 6 ? "Helyes! (+6 pont)" : `⚠️ Részeredmény: ${p8} / 6 pont.\nHibás szótagolások: ${err8.join(", ")}`;
+
+            // 9. Feladat (5 pont)
+            let p9 = 0;
+            let err9 = [];
+            if(document.getElementById("q9-1").value.trim().toLowerCase().includes("vízzel")) p9++; else err9.push("1. mondat (vízzel)");
+            if(document.getElementById("q9-2").value.trim().toLowerCase().includes("vízből")) p9++; else err9.push("2. mondat (vízből)");
+            if(document.getElementById("q9-3").value.trim().toLowerCase().includes("vízbe")) p9++; else err9.push("3. mondat (vízbe)");
+            if(document.getElementById("q9-4").value.trim().toLowerCase().includes("vízet") || document.getElementById("q9-4").value.trim().toLowerCase().includes("vizet")) p9++; else err9.push("4. mondat (vizet)");
+            if(document.getElementById("q9-5").value.trim().toLowerCase().includes("vízben")) p9++; else err9.push("5. mondat (vízben)");
+            totalPoints += p9;
+            let fb9 = document.getElementById("fb-9");
+            fb9.className = p9 === 5 ? "feedback-msg correct" : "feedback-msg warning";
+            fb9.innerText = p9 === 5 ? "Helyes! (+5 pont)" : `⚠️ Részeredmény: ${p9} / 5 pont.\nHibás toldalékok itt: ${err9.join(", ")}`;
+
+            // 10. Feladat (5 pont)
+            let q10_keys = ["nj", "dj", "dt", "llj", "gyj"];
+            let q10_words = ["menjen", "tudja", "küldte", "hallja", "fogyjon"];
+            let p10 = 0;
+            let err10 = [];
+            for(let i=1; i<=5; i++) {
+                let val = document.getElementById(`q10-${i}`).value.trim().toLowerCase();
+                if(val === q10_keys[i-1]) {
+                    p10++;
+                } else {
+                    err10.push(`${i}. feladat (${q10_words[i-1]}: "${val}" helyett "${q10_keys[i-1]}" kell)`);
+                }
+            }
+            totalPoints += p10;
+            let fb10 = document.getElementById("fb-10");
+            fb10.className = p10 === 5 ? "feedback-msg correct" : "feedback-msg warning";
+            fb10.innerText = p10 === 5 ? "Helyes! (+5 pont)" : `⚠️ Részeredmény: ${p10} / 5 pont.\nHibák: ${err10.join("; ")}`;
+
+            let finalPct = Math.round((totalPoints / maxPoints) * 100);
+            stats['grammar_exam_sheet'] = finalPct;
+            score += totalPoints;
+            document.getElementById("score").innerText = score;
+            await saveToLeaderboard(playerName, score);
+
+            let resBox = document.getElementById("result-box");
+            let resText = document.getElementById("result-text");
+            resBox.style.display = "block";
+            resText.innerHTML = `Elért pontszám: <strong style="color:var(--accent-gold);">${totalPoints} / ${maxPoints} pont</strong> (${finalPct}%)<br>Az eredményedet hozzáadtuk a pontjaidhoz és rögzítettük!`;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function openVowelsSubMenu() {
@@ -1688,7 +2039,7 @@
 
                 let finalPct = Math.round((correctAnswersCount / totalQuestionsAnswered) * 100);
                 stats[currentMode] = finalPct;
-                const leaderboardSaved = await saveToLeaderboard(playerName, score);
+                await saveToLeaderboard(playerName, score);
 
                 document.getElementById("owl-speech").innerText = `Hatalmas gratuláció, ${playerName}! Teljesítetted a feladatcsomagot!`;
                 const content = document.getElementById("main-content");
@@ -1926,8 +2277,6 @@
         }
 
         function initBagolyAkademia() {
-            // A névbekérő képernyő HTML-ben is ott van, ezért akkor is látható,
-            // ha a Firebase modul még töltődik vagy a hálózat lassabb.
             renderWelcomeScreen();
         }
 
